@@ -1,31 +1,92 @@
 # AirwallexDemo
 
-Airwallex Payment Integration Demo for both Web and React Native
+Airwallex Payment Integration 
 
-## Getting started
+# A. Product View
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Core Idea
 
 ```
-cd existing_repo
-git remote add origin https://gitlab.raptorpos.com/ashersamuel/airwallexdemo.git
-git branch -M main
-git push -uf origin main
+Customer scans QR → sees bill (includes "Convenience Fee" or "Platform Fee") + tipping selector → optionally splits → pays → POS updates + receipt prints
 ```
 
-## Integrate with your tools
+## ARCHITECTURE (SCALABLE)
+```
+Customer Phone (Web App)
+        ↓
+   Scan QR (table_id)
+        ↓
+   API Gateway
+        ↓
+┌──────────────────────────────┐
+│  Scan-to-Pay Platform        │
+│                              │
+│  ├── Order Aggregator        │
+│  ├── Payment Service         │
+│  ├── Split Engine            │
+│  ├── POS Adapter Layer       │  ← KEY
+│  └── Notification Service    │
+└──────────────────────────────┘
+        ↓
+   POS Systems (Raptor / Other POS)
+        ↓
+   Printer Service (Triggers)
+```
 
-- [ ] [Set up project integrations](https://gitlab.raptorpos.com/ashersamuel/airwallexdemo/-/settings/integrations)
+## SCABALE POS ADAPTER LAYER
+An abstraction layer that standardizes communication between the payment service app and any POS system
+```
+POS Adapter Interface
+   ├── Raptor Adapter
+   ├── SQL POS Adapter
+   ├── Future POS Adapter
+```
 
-- [ ] Start the development server for NextJs `npm run dev`
+# B. USER FLOW (END-TO-END)
 
-- [ ] Start the backend node server `node server.js`
+## 1. Scan QR
 
-- [ ] Start the native app `npx react-native run-android` ensure android studio emulator are up and running
+Each table has:
+
+```
+https://pay.raptordomain.com/table/T1?restaurant=R123
+```
+
+## 2. Fetch Bill
+Fetch bill from POS Adaptor/ PostgressDB (Demo)
+
+## 3. UI (Mobile Web App)
+- Bill View
+- Items list
+- Total
+- Split option
+- Tip selector
+
+## 4. Split Payment
+Options:
+- Equal split
+- By item
+- Custom amount
+
+## 5. Add Tip
+
+## 6. Payment
+Uses:
+- Airwallex
+- Adyen
+
+## 7. Success Flow
+
+- Update order status
+- Notify POS
+- Trigger receipt print
+
+# C. RECEIPT PRINTING
+```
+Payment success
+    ↓
+Send event → POS Adapter
+    ↓
+Call printer API
+```
+
